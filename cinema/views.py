@@ -1,8 +1,8 @@
-from django.db import transaction
-from rest_framework import viewsets, status
-from rest_framework.generics import get_object_or_404
+from datetime import datetime
+
+from rest_framework import viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order, Ticket
 
@@ -78,6 +78,22 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
             return MovieSessionDetailSerializer
 
         return MovieSessionSerializer
+
+    def get_queryset(self):
+        queryset = self.queryset.prefetch_related("movie", "cinema_hall")
+
+        movie_id = self.request.query_params.get("movie")
+        date = self.request.query_params.get("date")
+        if movie_id:
+            queryset = queryset.filter(movie_id=movie_id)
+
+        if date:
+            try:
+                queryset = queryset.filter(show_time__date=date)
+            except ValueError:
+                raise ValidationError("Invalid date format. Use 'YYYY-MM-DD'.")
+
+        return queryset.distinct()
 
 
 class OrderViewSet(viewsets.ModelViewSet):
