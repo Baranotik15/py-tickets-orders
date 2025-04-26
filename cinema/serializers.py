@@ -2,6 +2,7 @@ from django.db import transaction
 from rest_framework import serializers, status
 from rest_framework.relations import SlugRelatedField
 from rest_framework.response import Response
+from rest_framework.validators import UniqueTogetherValidator
 
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order, Ticket
 
@@ -87,9 +88,16 @@ class TicketSerializer(serializers.ModelSerializer):
     movie_session = serializers.PrimaryKeyRelatedField(
         queryset=MovieSession.objects.all()
     )
+
     class Meta:
         model = Ticket
         fields = ("id", "row", "seat", "movie_session")
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Ticket.objects.all(),
+                fields=["row", "seat", "movie_session"],
+            )
+        ]
 
 
 class OrderSerializer(serializers.ModelSerializer):
