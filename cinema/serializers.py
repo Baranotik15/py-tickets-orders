@@ -83,30 +83,23 @@ class MovieSessionDetailSerializer(MovieSessionSerializer):
         fields = ("id", "show_time", "movie", "cinema_hall")
 
 
-class MovieSessionNestedSerializer(serializers.ModelSerializer):
-    movie_title = serializers.CharField(source="movie.title", read_only=True)
-    cinema_hall_name = serializers.CharField(source="cinema_hall.name", read_only=True)
-    cinema_hall_capacity = serializers.IntegerField(source="cinema_hall.capacity", read_only=True)
-
-    class Meta:
-        model = MovieSession
-        fields = ("id", "show_time", "movie_title", "cinema_hall_name", "cinema_hall_capacity")
-
-
 class TicketSerializer(serializers.ModelSerializer):
-    movie_session = MovieSessionNestedSerializer(read_only=True)
-
+    movie_session = serializers.PrimaryKeyRelatedField(
+        queryset=MovieSession.objects.all()
+    )
     class Meta:
         model = Ticket
         fields = ("id", "row", "seat", "movie_session")
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    tickets = TicketSerializer(many=True, read_only=True, allow_empty=True)
+    tickets = TicketSerializer(many=True, read_only=False, allow_empty=True)
+
 
     class Meta:
         model = Order
         fields = ("id", "tickets", "created_at")
+
 
     def create(self, validated_data):
         tickets_data = validated_data.pop("tickets")
