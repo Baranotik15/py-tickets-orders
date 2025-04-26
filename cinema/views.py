@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import viewsets, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -68,25 +69,3 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
-
-    def create(self, request, *args, **kwargs):
-        tickets_data = request.data.get("tickets", [])
-        if not tickets_data:
-            return Response(
-                {"error": "Tickets list is required."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        order = Order.objects.create(user=request.user)
-        tickets = []
-
-        for ticket_data in tickets_data:
-            movie_session_id = ticket_data.pop("movie_session")
-            movie_session = get_object_or_404(MovieSession, id=movie_session_id)
-            tickets.append(
-                Ticket(order=order, movie_session=movie_session, **ticket_data)
-            )
-
-        Ticket.objects.bulk_create(tickets)
-        serializer = self.get_serializer(order)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
