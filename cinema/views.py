@@ -56,7 +56,7 @@ class MovieViewSet(viewsets.ModelViewSet):
         return MovieSerializer
 
     def get_queryset(self):
-        queryset = self.queryset.select_related("actors", "genres").all()
+        queryset = self.queryset.prefetch_related("actors", "genres")
         actors = self.request.query_params.getlist("actors")
         genres = self.request.query_params.get("genres")
         title = self.request.query_params.get("title")
