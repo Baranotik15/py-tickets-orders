@@ -168,7 +168,13 @@ class OrderSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "At least one ticket is required."
             )
-        movie_session_ids = {ticket["movie_session"].id for ticket in value}
+
+        movie_session_ids = set()
+        for ticket in value:
+            movie_session = ticket.get("movie_session")
+            movie_session_id = getattr(movie_session, "id", movie_session)
+            movie_session_ids.add(movie_session_id)
+
         if len(movie_session_ids) > 1:
             raise serializers.ValidationError(
                 "All tickets must belong to the same movie session."
