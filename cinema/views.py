@@ -95,17 +95,15 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         return MovieSessionSerializer
 
     def get_queryset(self):
-        queryset = self.queryset.prefetch_related("movie", "cinema_hall")
+        queryset = self.queryset.select_related("movie", "cinema_hall")
         movie_id = self.request.query_params.get("movie")
         date = self.request.query_params.get("date")
+
         if movie_id:
             queryset = queryset.filter(movie_id=movie_id)
 
         if date:
-            try:
-                queryset = queryset.filter(show_time__date=date)
-            except ValueError:
-                raise ValidationError("Invalid date format. Use 'YYYY-MM-DD'.")
+            queryset = queryset.filter(show_time__date=date)
 
         return queryset.distinct()
 
